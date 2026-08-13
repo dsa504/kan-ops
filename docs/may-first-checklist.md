@@ -44,7 +44,7 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | Loopback `PORT` | **3055** (`127.0.0.1`; verified free with `ss`) |
 | App directory (absolute, no trailing slash) | `/home/sites/388570/files/kan` (created; `releases/` present) |
 | Forever job item id (`red-item-<id>.service`) | |
-| Node install notes (nvm path, version) | |
+| Node install notes | System **`/usr/bin/node` v20.19.2** (meets Kan `>=20.18.1` / `.nvmrc` 20.18); nvm not required on this account |
 
 ## 0. New hosting order
 
@@ -127,11 +127,19 @@ Forever **Directory** (absolute, **no trailing slash**): `/home/sites/388570/fil
 
 **Done for this deploy:** **`PORT=3055`** looks free on the Kan site account.
 
-## 6. Node (nvm)
+## 6. Node
 
-Forever jobs are **non-login** shells — no interactive `~/.bashrc` PATH. Install Node via nvm under the site account if needed, and ensure `scripts/start.sh` exports a PATH that finds `node` (and any nvm shims) without relying on login profiles.
+Forever jobs are **non-login** shells — no interactive `~/.bashrc` PATH. `scripts/start.sh` puts `/usr/bin` on `PATH` and sources nvm only if `$HOME/.nvm` exists.
 
-Document the Node major version that matches the pinned Kan release when known.
+Check what the site account already has:
+
+```bash
+command -v node; node -v
+```
+
+Kan `v0.6.0` wants Node `>=20.18.1` (upstream `.nvmrc`: `20.18`). If the account already has a suitable `/usr/bin/node`, **skip nvm**.
+
+**Done for this deploy:** `/usr/bin/node` **v20.19.2** — no nvm install needed.
 
 ## 7. Apache reverse proxy
 
