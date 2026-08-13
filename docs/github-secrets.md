@@ -18,7 +18,7 @@ Run it from **Actions → Build release → Run workflow**.
 | `USER` | `dsakan` |
 | `PASSWORD` | Password for the `dsakan` hosting-order login (SSH + auth grant). Never commit. |
 | `MAY_FIRST_AUTH_URL` | May First control-panel SSH **auth grant** endpoint URL (POST `user_name`, `user_pass`, `action=grant`). Copy from another working MF deploy repo’s Actions secrets if you already have one — do not paste the URL into git. |
-| `KAN_APP_ROOT` | `/home/sites/388570/files/kan` (no trailing slash) |
+| `KAN_APP_ROOT` | `/home/sites/388570/files/kan` (absolute, **no trailing slash**, no quotes) |
 | `SERVICE_NAME` | `red-item-388573.service` (Kan forever job item **388573**) |
 
 Not secrets (already in repo / workflow env): public site URL, loopback port **3055**.

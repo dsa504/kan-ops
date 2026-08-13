@@ -35,6 +35,8 @@ env:
   # Public loopback port (also in apache/kan.dsaneworleans.org.conf)
   KAN_PORT: "3055"
   PUBLIC_URL: https://kan.dsaneworleans.org
+  # Prefer env-based sshpass — never embed the password in GITHUB_ENV (breaks on #/$/spaces).
+  SSHPASS: ${{ secrets.PASSWORD }}
 
 jobs:
   deploy:
@@ -52,6 +54,10 @@ jobs:
             fi
           done
           if [ "$missing" -ne 0 ]; then exit 1; fi
+          # Normalize: strip trailing slashes / CR from the secret
+          ROOT="$(printf '%s' "$KAN_APP_ROOT" | tr -d '\r' | sed 's:/*$::')"
+          echo "KAN_APP_ROOT=$ROOT" >> "$GITHUB_ENV"
+          echo "App root length: ${#ROOT} (value redacted)"
 
       - name: Checkout kan-ops
         uses: actions/checkout@v4
@@ -62,21 +68,12 @@ jobs:
       - name: May First auth grant
         run: |
           set -euo pipefail
-          # Same grant pattern as other MF deploys; do not require a specific HTTP status.
           curl --silent --show-error \
             "$MAY_FIRST_AUTH_URL" -X POST \
             -d "user_name=$USER" \
             -d "user_pass=$PASSWORD" \
             -d "action=grant" \
             -o /dev/null -w "auth_grant_http=%{http_code}\n"
-
-      - name: Configure SSH helper
-        run: |
-          set -euo pipefail
-          {
-            echo "SSH=sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USER@$HOST"
-            echo "SCP=sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no"
-          } >> "$GITHUB_ENV"
 
       - name: Download Release asset
         env:
@@ -96,21 +93,40 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           ls -lh "dist/$ASSET"
 
+      - name: Ensure remote incoming dir
+        run: |
+          set -euo pipefail
+          sshpass -e ssh -o StrictHostKeyChecking=no "$USER@$HOST" \
+            "set -euo pipefail
+             echo \"remote_home=\$HOME remote_pwd=\$(pwd)\"
+             test -d \"$KAN_APP_ROOT\" || { echo \"missing KAN_APP_ROOT on server\"; ls -la \"\$HOME/files\" || true; exit 1; }
+             mkdir -p \"$KAN_APP_ROOT/incoming\"
+             test -w \"$KAN_APP_ROOT/incoming\"
+             ls -ld \"$KAN_APP_ROOT\" \"$KAN_APP_ROOT/incoming\""
+
       - name: Upload tarball and remote-deploy.sh
         run: |
           set -euo pipefail
-          $SSH "mkdir -p '$KAN_APP_ROOT/incoming'"
-          $SCP "dist/$ASSET" "$USER@$HOST:$KAN_APP_ROOT/incoming/$ASSET"
-          $SCP scripts/remote-deploy.sh "$USER@$HOST:$KAN_APP_ROOT/incoming/remote-deploy.sh"
-          $SSH "chmod 755 '$KAN_APP_ROOT/incoming/remote-deploy.sh'"
+          # Relative-to-home destination avoids MF scp quirks with absolute paths.
+          REMOTE_REL="$(sshpass -e ssh -o StrictHostKeyChecking=no "$USER@$HOST" \
+            "realpath --relative-to=\"\$HOME\" \"$KAN_APP_ROOT/incoming\" 2>/dev/null \
+             || python3 -c \"import os; print(os.path.relpath(os.path.join('$KAN_APP_ROOT','incoming'), os.path.expanduser('~')))\"")"
+          echo "Remote incoming (relative to \$HOME): $REMOTE_REL"
+          sshpass -e scp -o StrictHostKeyChecking=no \
+            "dist/$ASSET" "$USER@$HOST:$REMOTE_REL/$ASSET"
+          sshpass -e scp -o StrictHostKeyChecking=no \
+            scripts/remote-deploy.sh "$USER@$HOST:$REMOTE_REL/remote-deploy.sh"
+          sshpass -e ssh -o StrictHostKeyChecking=no "$USER@$HOST" \
+            "chmod 755 \"$KAN_APP_ROOT/incoming/remote-deploy.sh\" && ls -lh \"$KAN_APP_ROOT/incoming\""
 
       - name: Remote unpack / migrate / restart
         if: ${{ !inputs.dry_run }}
         run: |
           set -euo pipefail
-          $SSH "KAN_APP_ROOT='$KAN_APP_ROOT' SERVICE_NAME='$SERVICE_NAME' \
-            '$KAN_APP_ROOT/incoming/remote-deploy.sh' \
-            '$KAN_APP_ROOT/incoming/$ASSET'"
+          sshpass -e ssh -o StrictHostKeyChecking=no "$USER@$HOST" \
+            "KAN_APP_ROOT='$KAN_APP_ROOT' SERVICE_NAME='$SERVICE_NAME' \
+             '$KAN_APP_ROOT/incoming/remote-deploy.sh' \
+             '$KAN_APP_ROOT/incoming/$ASSET'"
 
       - name: Healthcheck (loopback via SSH)
         if: ${{ !inputs.dry_run }}
@@ -119,7 +135,8 @@ jobs:
           attempt=0
           max_attempts=24
           while [ "$attempt" -lt "$max_attempts" ]; do
-            code="$($SSH "curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:${KAN_PORT}/" || echo 000)"
+            code="$(sshpass -e ssh -o StrictHostKeyChecking=no "$USER@$HOST" \
+              "curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:${KAN_PORT}/" || echo 000)"
             echo "loopback HTTP $code (attempt $((attempt + 1))/$max_attempts)"
             if [ "$code" = "200" ] || [ "$code" = "302" ] || [ "$code" = "307" ] || [ "$code" = "308" ]; then
               echo "Loopback health OK"
@@ -129,7 +146,8 @@ jobs:
             sleep 5
           done
           echo "Loopback health failed; recent journal:"
-          $SSH "journalctl --user --unit '$SERVICE_NAME' -n 80 --no-pager" || true
+          sshpass -e ssh -o StrictHostKeyChecking=no "$USER@$HOST" \
+            "journalctl --user --unit '$SERVICE_NAME' -n 80 --no-pager" || true
           exit 1
 
       - name: Healthcheck (public URL)
@@ -137,7 +155,6 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          # May 502 until Apache ProxyPass is pasted; do not fail the job solely on this.
           code="$(curl -sS -o /dev/null -w '%{http_code}' "$PUBLIC_URL/" || echo 000)"
           echo "public HTTP $code for $PUBLIC_URL"
           if [ "$code" = "200" ] || [ "$code" = "302" ] || [ "$code" = "307" ] || [ "$code" = "308" ]; then
