@@ -83,9 +83,23 @@ mv "$STAGE" "$BUNDLE_PARENT/$BUNDLE_NAME"
 tar -czf "$TARBALL" -C "$BUNDLE_PARENT" "$BUNDLE_NAME"
 rm -rf "$BUNDLE_PARENT"
 
-echo "pack-standalone: wrote $TARBALL"
-tar -tzf "$TARBALL" | head -n 40
-echo "..."
-# Sanity: entrypoints present
-tar -tzf "$TARBALL" | grep -E "/bootstrap\.cjs$|/start\.sh$|/migrate/drizzle\.config\.ts$" >/dev/null
+echo "pack-standalone: wrote $TARBALL ($(du -h "$TARBALL" | awk '{print $1}'))"
+# List once into a file — do not pipe tar -t to head/grep -q under pipefail
+# (early reader exit → "tar: stdout: write error", exit 2).
+LISTING="$OUT_DIR/.tar-listing-$$"
+tar -tzf "$TARBALL" >"$LISTING"
+entry_count="$(wc -l <"$LISTING" | tr -d '[:space:]')"
+echo "pack-standalone: $entry_count archive entries"
+for path in \
+  "${BUNDLE_NAME}/bootstrap.cjs" \
+  "${BUNDLE_NAME}/start.sh" \
+  "${BUNDLE_NAME}/migrate/drizzle.config.ts"
+do
+  if ! grep -Fxq "$path" "$LISTING"; then
+    rm -f "$LISTING"
+    echo "pack-standalone: missing $path in tarball" >&2
+    exit 1
+  fi
+done
+rm -f "$LISTING"
 echo "pack-standalone: entrypoints OK"
