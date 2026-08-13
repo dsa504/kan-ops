@@ -30,7 +30,7 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | **New** hosting order name / id | |
 | Site id (`/home/sites/<SITE_ID>/…`) | |
 | SSH / SFTP username for this order | `dsakan` |
-| DNS record type (A / Alias) | |
+| DNS (auto-created with order) | Alias `kan.dsaneworleans.org` → `c.webproxy.mayfirst.org` (item **388566**); Alias `www.kan.dsaneworleans.org` → `c.webproxy.mayfirst.org` (item **388567**); both active 2026-08-13 |
 | TLS ready (Let’s Encrypt) | |
 | Postgres DB name | |
 | Postgres user | |
@@ -44,24 +44,29 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 
 1. In the control panel, open the **New Orleans DSA** membership (breadcrumb member name — not an existing site’s hosting order).
 2. **Hosting Order** service → **Add a new item**.
-3. Name it clearly for Kan (e.g. include `kan` / `kan.dsaneworleans.org` in the label).
-4. Complete the wizard; set or reset the new order’s login password as MF instructs (credentials stay out of git).
-5. Switch the control panel context to **this new hosting order** for all later steps (DNS, Web Configuration, Postgres, Scheduled Jobs, SSH).
+3. When prompted for the site hostname / subdomain, use `kan.dsaneworleans.org` (under the chapter domain already on May First DNS).
+4. Completing the order **creates the DNS Alias records for you** — you usually do **not** add them by hand. MF also creates a `www.` alias for the same name.
+5. Set or reset the new order’s login password as MF instructs (credentials stay out of git). SSH user for this order: **`dsakan`**.
+6. Switch the control panel context to **this new hosting order** for all later steps (DNS verify, Web Configuration, Postgres, Scheduled Jobs, SSH).
 
-## 1. DNS
+## 1. DNS (verify)
 
-On the **Kan hosting order** (DNS tab) — not the chapter’s main site order:
+On the **Kan hosting order** → **DNS** tab, confirm the auto-created aliases are **active**. For this deploy:
 
-1. Ensure `kan.dsaneworleans.org` exists as an **A** or **Alias** record pointing at May First as required by their UI.
-2. If the name is managed elsewhere in the membership, follow MF’s rules so this order’s web config can claim the hostname (the panel only accepts names listed for the order).
-3. Registrar NS should already point at May First (operator-controlled).
-4. Wait until DNS resolves before enabling HTTPS-only web config if the panel rejects LE otherwise.
+| Item id | Type | Name | Target |
+|--------:|------|------|--------|
+| 388566 | alias | `kan.dsaneworleans.org` | `c.webproxy.mayfirst.org` |
+| 388567 | alias | `www.kan.dsaneworleans.org` | `c.webproxy.mayfirst.org` |
+
+1. Registrar NS for `dsaneworleans.org` should already point at May First (operator-controlled).
+2. Optionally check public resolution: `dig +short kan.dsaneworleans.org CNAME` (expect the webproxy name or its chain).
+3. Wait until DNS resolves before enabling HTTPS-only web config if the panel rejects Let’s Encrypt otherwise.
 
 ## 2. Web site
 
 Still on the **Kan hosting order**:
 
-1. **Web Configuration** → **Add a new item** for `kan.dsaneworleans.org` (this order should have no other site yet).
+1. **Web Configuration** → **Add a new item**. Include **`kan.dsaneworleans.org`** (and optionally **`www.kan.dsaneworleans.org`** if the form allows multiple names — both aliases already exist).
 2. Prefer **HTTPS enabled** once DNS works; use HTTP-only temporarily if LE cannot issue yet, then switch.
 3. Document Root: relative path under `web/` is fine (Kan will be reverse-proxied; Document Root need not hold the Node app). App files live under `files/` (next step).
 4. Do **not** paste Apache ProxyPass until Node is listening on the chosen port (or expect 502s).
