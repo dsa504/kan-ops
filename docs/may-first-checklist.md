@@ -28,10 +28,11 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 |------|--------|
 | Membership | New Orleans DSA (existing) |
 | **New** hosting order name / id | |
-| Site id (`/home/sites/<SITE_ID>/…`) | |
+| Web Configuration item / site id | **388570** (`/home/sites/388570/…`) |
+| Web origin host | `weborigin015.mayfirst.org` |
 | SSH / SFTP username for this order | `dsakan` |
 | DNS (auto-created with order) | Alias `kan.dsaneworleans.org` → `c.webproxy.mayfirst.org` (item **388566**); Alias `www.kan.dsaneworleans.org` → `c.webproxy.mayfirst.org` (item **388567**); both active 2026-08-13 |
-| TLS ready (Let’s Encrypt) | |
+| TLS ready (Let’s Encrypt) | **yes** — https enabled; browser reports valid cert; MF “future home” page OK (2026-08-13) |
 | Postgres DB name | |
 | Postgres user | |
 | `POSTGRES_URL` stored in server `.env` only | yes / no |
@@ -70,6 +71,8 @@ Still on the **Kan hosting order**:
 2. Prefer **HTTPS enabled** once DNS works; use HTTP-only temporarily if LE cannot issue yet, then switch.
 3. Document Root: relative path under `web/` is fine (Kan will be reverse-proxied; Document Root need not hold the Node app). App files live under `files/` (next step).
 4. Do **not** paste Apache ProxyPass until Node is listening on the chosen port (or expect 502s).
+
+**Done for this deploy:** item **388570** on `weborigin015.mayfirst.org`, domain `kan.dsaneworleans.org`, encryption **https enabled**, placeholder “future home” page confirmed in browser with a valid cert.
 
 ## 3. Postgres
 
