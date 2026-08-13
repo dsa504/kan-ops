@@ -65,6 +65,8 @@ echo "remote-deploy: running migrations"
 KAN_APP_ROOT="$KAN_APP_ROOT" "$KAN_APP_ROOT/migrate.sh"
 
 echo "remote-deploy: restarting $SERVICE_NAME"
+# Clear rate-limit / failed state from earlier crash loops (e.g. missing start.sh).
+systemctl --user reset-failed "$SERVICE_NAME" 2>/dev/null || true
 systemctl --user restart "$SERVICE_NAME"
 systemctl --user --no-pager --full status "$SERVICE_NAME" || true
 

@@ -40,7 +40,7 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | Postgres user | `dsakan_kan` |
 | Postgres max connections / quota | 25 / 1gb |
 | `POSTGRES_URL` shape (password only on server) | `postgresql://dsakan_kan:…@psql002.mayfirst.cx/dsakan_kan` |
-| `POSTGRES_URL` stored in server `.env` only | pending (create in §4 / first deploy) |
+| `POSTGRES_URL` stored in server `.env` only | **yes** (migrate applied; loopback HTTP 307 on :3055) |
 | Loopback `PORT` | **3055** (`127.0.0.1`; verified free with `ss`) |
 | App directory (absolute, no trailing slash) | `/home/sites/388570/files/kan` (created; `releases/` present) |
 | Forever job item id (`red-item-<id>.service`) | **388573** → `red-item-388573.service` (Directory `/home/sites/388570/files/kan`, Command `/bin/bash start.sh`) |
