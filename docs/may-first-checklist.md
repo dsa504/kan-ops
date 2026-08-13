@@ -43,7 +43,7 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | `POSTGRES_URL` stored in server `.env` only | pending (create in §4 / first deploy) |
 | Loopback `PORT` | **3055** (`127.0.0.1`; verified free with `ss`) |
 | App directory (absolute, no trailing slash) | `/home/sites/388570/files/kan` (created; `releases/` present) |
-| Forever job item id (`red-item-<id>.service`) | |
+| Forever job item id (`red-item-<id>.service`) | **388573** → `red-item-388573.service` (Directory `/home/sites/388570/files/kan`, Command `/bin/bash start.sh`) |
 | Node install notes | System **`/usr/bin/node` v20.19.2** (meets Kan `>=20.18.1` / `.nvmrc` 20.18); nvm not required on this account |
 
 ## 0. New hosting order
