@@ -49,3 +49,5 @@ Lives in **`$KAN_APP_ROOT/.env` on the server** only. Deploy preserves that file
 1. Confirm `$KAN_APP_ROOT/.env` still has `NEXT_PUBLIC_BASE_URL=https://kan.dsaneworleans.org`.
 2. Actions → **Deploy** → tag `kan-v0.6.0` (or the new `kan-v*` tag) → run (not dry-run).
 3. Smoke `https://kan.dsaneworleans.org/login` — loads; no redirects/links to `example.invalid` or another chapter; `/__ENV.js` matches NOLA base URL; email-invite auth still OK.
+
+**Done (2026-08-13):** first site-agnostic `kan-v0.6.0` Deploy to NOLA succeeded; login still works.

@@ -48,7 +48,8 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | Node install notes | System **`/usr/bin/node` v20.19.2** (meets Kan `>=20.18.1` / `.nvmrc` 20.18); nvm not required on this account |
 | Auth model | **Email-invite-only** (`NEXT_PUBLIC_DISABLE_SIGN_UP=true`); `/signup` locked; email invite E2E OK |
 | First admin | `admin@dsaneworleans.org` |
-| Release in use | GitHub Release `kan-v0.6.0` → `current` under `files/kan/releases/` |
+| Release in use | GitHub Release `kan-v0.6.0` (site-agnostic build) → `current` under `files/kan/releases/` |
+| Site-agnostic deploy smoke | **OK** (2026-08-13) — Deploy succeeded; login works with runtime `NEXT_PUBLIC_BASE_URL` from server `.env` |
 
 ## 0. New hosting order
 
