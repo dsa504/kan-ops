@@ -46,6 +46,9 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | App directory (absolute, no trailing slash) | `/home/sites/388570/files/kan` (created; `releases/` present) |
 | Forever job item id (`red-item-<id>.service`) | **388573** → `red-item-388573.service` (Directory `/home/sites/388570/files/kan`, Command `/bin/bash start.sh`) |
 | Node install notes | System **`/usr/bin/node` v20.19.2** (meets Kan `>=20.18.1` / `.nvmrc` 20.18); nvm not required on this account |
+| Auth model | **Email-invite-only** (`NEXT_PUBLIC_DISABLE_SIGN_UP=true`); `/signup` locked; email invite E2E OK |
+| First admin | `admin@dsaneworleans.org` |
+| Release in use | GitHub Release `kan-v0.6.0` → `current` under `files/kan/releases/` |
 
 ## 0. New hosting order
 

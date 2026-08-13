@@ -21,7 +21,7 @@ Hostname target: `https://kan.dsaneworleans.org` (changeable later).
 | Doc | What |
 |-----|------|
 | [`docs/may-first-checklist.md`](./docs/may-first-checklist.md) | Human MF control-panel steps (site, DNS, TLS, Postgres, Apache, forever job) |
-| [`docs/access-model.md`](./docs/access-model.md) | Invite-link auth (shipping), bootstrap admin, how to open signup later |
+| [`docs/access-model.md`](./docs/access-model.md) | Email-invite-only auth (shipping), optional invite-link risk, bootstrap |
 | [`docs/github-secrets.md`](./docs/github-secrets.md) | GitHub Actions secrets + which workflows need them |
 
 ## Auth (MVP)
@@ -47,6 +47,17 @@ This ops repo’s scripts, Apache snippets, and workflows are ours. They are sep
 
 Never commit `.env`, mailbox passwords, Discord tokens, or May First credentials. Put secrets only in the server `.env` and GitHub Actions secrets (list in [`docs/github-secrets.md`](./docs/github-secrets.md)).
 
+## Cooperative Codebase (reuse)
+
+To stand up Kan (or the same ops pattern) for another project:
+
+1. **Copy or mirror this repo** (do not thin-fork Kan unless you must modify the app).
+2. **Build stays on GitHub-hosted runners** (`ubuntu-latest`). Do **not** run `pnpm build` / Next production builds on May First or on Forgejo / `mayfirst-ci` runners (OOM).
+3. Forgejo may later run a **deploy-only** job (auth grant + rsync/SSH + restart) that consumes a GitHub Release tarball — it should not rebuild Next.
+4. Create a **new May First hosting order** (one site per order), new Postgres, new forever job, new loopback port, new Apache ProxyPass snippet, new server `.env`, and new GitHub Actions secrets (`HOST` / `USER` / `PASSWORD` / `MAY_FIRST_AUTH_URL` / `KAN_APP_ROOT` / `SERVICE_NAME`).
+5. Pin upstream via `KAN_VERSION`; bump the pin and re-run **Build release** → **Deploy** to upgrade.
+6. **Rollback:** keep prior `releases/<id>/` dirs (deploy prunes old ones); point `current` at a previous release and restart the forever unit, or re-run **Deploy** with an older Release tag.
+
 ## Status
 
-Automate CI/CD first, then go live — no long-lived manual deploy path.
+NOLA DSA Kan is live at `https://kan.dsaneworleans.org` with CI build/deploy and email-invite-only auth. See checklists for host-specific IDs.
