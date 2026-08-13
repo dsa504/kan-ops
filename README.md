@@ -26,7 +26,7 @@ Hostname target: `https://kan.dsaneworleans.org` (changeable later).
 
 ## Auth (MVP)
 
-**Invite-link model:** credentials on, public signup off, SMTP on; workspace invite link in a members-only Discord channel. Rotate the link if it leaks. See [`docs/access-model.md`](./docs/access-model.md).
+**Email-invite-only first:** credentials on, public signup off (`NEXT_PUBLIC_DISABLE_SIGN_UP=true`), SMTP on; admins invite from Members by email. A Discord workspace invite link is optional later and has residual `/signup` risk on Kan v0.6.0 — see [`docs/access-model.md`](./docs/access-model.md).
 
 SMTP uses an existing Proton mailbox already used for chapter automation (no new mailbox for MVP). Prefer a From display name like `NOLA DSA Kan <…>`.
 
