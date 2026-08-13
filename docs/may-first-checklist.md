@@ -90,24 +90,34 @@ Still on the **Kan hosting order**:
 
 ## 4. App layout on the site account
 
-SSH as **`dsakan`** (Kan hosting-order user), then create a stable layout (names can match deploy scripts later):
+SSH via May First’s shell host (not the web origin hostname directly):
+
+```bash
+ssh dsakan@shell.mayfirst.org
+```
+
+After login you typically see a site writer prompt on the web origin, e.g. `site388570writer@weborigin015`, with home `/home/sites/388570`.
+
+Create a stable layout (names match deploy scripts):
 
 ```text
-/home/sites/<SITE_ID>/files/kan/
+/home/sites/388570/files/kan/
   .env                 # secrets; mode 600
   start.sh             # forever entry (from release / ops scripts)
   current -> releases/<id>/
   releases/
 ```
 
-Suggested:
-
 ```bash
 mkdir -p "$HOME/files/kan/releases"
 chmod 700 "$HOME/files/kan"
+pwd                    # /home/sites/388570
+ls -la "$HOME/files/kan"
 ```
 
-Record the absolute app directory **without a trailing slash** for the forever job.
+Forever **Directory** (absolute, **no trailing slash**): `/home/sites/388570/files/kan`.
+
+**Done for this deploy:** app dir created; `releases/` present under `files/kan`.
 
 ## 5. Loopback port
 
