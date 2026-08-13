@@ -30,6 +30,7 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | **New** hosting order name / id | |
 | Web Configuration item / site id | **388570** (`/home/sites/388570/…`) |
 | Web origin host | `weborigin015.mayfirst.org` |
+| SSH login | `ssh dsakan@shell.mayfirst.org` (MF shell hop; session lands as `site388570writer@weborigin015`) |
 | SSH / SFTP username for this order | `dsakan` |
 | DNS (auto-created with order) | Alias `kan.dsaneworleans.org` → `c.webproxy.mayfirst.org` (item **388566**); Alias `www.kan.dsaneworleans.org` → `c.webproxy.mayfirst.org` (item **388567**); both active 2026-08-13 |
 | TLS ready (Let’s Encrypt) | **yes** — https enabled; browser reports valid cert; MF “future home” page OK (2026-08-13) |
@@ -41,7 +42,7 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | `POSTGRES_URL` shape (password only on server) | `postgresql://dsakan_kan:…@psql002.mayfirst.cx/dsakan_kan` |
 | `POSTGRES_URL` stored in server `.env` only | pending (create in §4 / first deploy) |
 | Loopback `PORT` | |
-| App directory (absolute, no trailing slash) | e.g. `/home/sites/<SITE_ID>/files/kan` |
+| App directory (absolute, no trailing slash) | `/home/sites/388570/files/kan` (created; `releases/` present) |
 | Forever job item id (`red-item-<id>.service`) | |
 | Node install notes (nvm path, version) | |
 
