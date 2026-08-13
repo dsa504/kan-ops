@@ -49,7 +49,11 @@ Never commit `.env`, mailbox passwords, Discord tokens, or May First credentials
 
 ## Cooperative Codebase (reuse)
 
-To stand up Kan (or the same ops pattern) for another project:
+**CC interactive runbook (canonical for the next setup session):**  
+`cooperative-codebase/infrastructure/docs/KAN_MAY_FIRST_SETUP.md` on the CC infrastructure repo (Forgejo: `cooperative-codebase/infrastructure`).  
+Agents: walk the human through it and **update that doc’s Outcomes / Apache companions as you go**.
+
+Pattern summary:
 
 1. **Copy or mirror this repo** (do not thin-fork Kan unless you must modify the app).
 2. **Build stays on GitHub-hosted runners** (`ubuntu-latest`). Do **not** run `pnpm build` / Next production builds on May First or on Forgejo / `mayfirst-ci` runners (OOM).
