@@ -34,6 +34,7 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | SSH / SFTP username for this order | `dsakan` |
 | DNS (auto-created with order) | Alias `kan.dsaneworleans.org` → `c.webproxy.mayfirst.org` (item **388566**); Alias `www.kan.dsaneworleans.org` → `c.webproxy.mayfirst.org` (item **388567**); both active 2026-08-13 |
 | TLS ready (Let’s Encrypt) | **yes** — https enabled; browser reports valid cert; MF “future home” page OK (2026-08-13) |
+| Apache ProxyPass | **yes** — Location rewrite for Next `localhost:3055` redirects; public `/` → `/login` on kan host |
 | Postgres item id | **388571** |
 | Postgres host | `psql002.mayfirst.org` (URL host in panel: `psql002.mayfirst.cx`) |
 | Postgres DB name | `dsakan_kan` (MF ties DB name to the DB user; no separate choice) |
