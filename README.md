@@ -14,6 +14,8 @@ This repository pins an upstream Kan release tag, builds a **Next.js standalone 
 
 Hostname target: `https://kan.dsaneworleans.org` (changeable later).
 
+**May First:** one web site per hosting order. Kan uses a **dedicated hosting order** under the New Orleans DSA membership (not a second site on an existing order). See [`docs/may-first-checklist.md`](./docs/may-first-checklist.md).
+
 ## Docs
 
 | Doc | What |

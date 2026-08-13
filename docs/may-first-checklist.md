@@ -4,9 +4,18 @@ Human steps in the May First members control panel and on the site SSH account. 
 
 Control panel: https://members.mayfirst.org/cp/
 
+## Hosting model (important)
+
+May First allows **one web site per hosting order**. Kan must **not** share the chapter’s existing site hosting order.
+
+Create a **new hosting order** under the **New Orleans DSA** May First **membership**, dedicated to Kan (`kan.dsaneworleans.org`). That order gets its own SSH user, `files/` / `web/` tree, Scheduled Jobs, Postgres items, and Web Configuration.
+
+Do **not** try to add a second Web Configuration item on an order that already has a site.
+
 Official guides:
 
-- [How to add a web site](https://help.mayfirst.org/en/guide/how-to-add-web-site)
+- [Create a new hosting order (new web site)](https://help.mayfirst.org/en/guide/how-to-create-a-new-website-in-the-control-panel)
+- [How to add a web site](https://help.mayfirst.org/en/guide/how-to-add-web-site) (after the order exists)
 - [DNS records](https://help.mayfirst.org/en/guide/how-to-create-web-dns-record)
 - [systemd / forever web service](https://help.mayfirst.org/en/guide/how-to-use-a-systemd-service-to-run-web-app)
 - [SSH / SFTP](https://help.mayfirst.org/en/guide/how-to-connect-to-your-website-host-with-ssh-or-sftp)
@@ -17,7 +26,10 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 
 | Item | Value |
 |------|--------|
-| Hosting order / site id | |
+| Membership | New Orleans DSA (existing) |
+| **New** hosting order name / id | |
+| Site id (`/home/sites/<SITE_ID>/…`) | |
+| SSH / SFTP username for this order | |
 | DNS record type (A / Alias) | |
 | TLS ready (Let’s Encrypt) | |
 | Postgres DB name | |
@@ -28,24 +40,35 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | Forever job item id (`red-item-<id>.service`) | |
 | Node install notes (nvm path, version) | |
 
+## 0. New hosting order
+
+1. In the control panel, open the **New Orleans DSA** membership (breadcrumb member name — not an existing site’s hosting order).
+2. **Hosting Order** service → **Add a new item**.
+3. Name it clearly for Kan (e.g. include `kan` / `kan.dsaneworleans.org` in the label).
+4. Complete the wizard; set or reset the new order’s login password as MF instructs (credentials stay out of git).
+5. Switch the control panel context to **this new hosting order** for all later steps (DNS, Web Configuration, Postgres, Scheduled Jobs, SSH).
+
 ## 1. DNS
 
-Under the **New Orleans DSA** May First hosting order (DNS tab):
+On the **Kan hosting order** (DNS tab) — not the chapter’s main site order:
 
 1. Ensure `kan.dsaneworleans.org` exists as an **A** or **Alias** record pointing at May First as required by their UI.
-2. Registrar NS should already point at May First (operator-controlled).
-3. Wait until DNS resolves before enabling HTTPS-only web config if the panel rejects LE otherwise.
+2. If the name is managed elsewhere in the membership, follow MF’s rules so this order’s web config can claim the hostname (the panel only accepts names listed for the order).
+3. Registrar NS should already point at May First (operator-controlled).
+4. Wait until DNS resolves before enabling HTTPS-only web config if the panel rejects LE otherwise.
 
 ## 2. Web site
 
-1. Hosting order → **Web Configuration** → add site for `kan.dsaneworleans.org`.
+Still on the **Kan hosting order**:
+
+1. **Web Configuration** → **Add a new item** for `kan.dsaneworleans.org` (this order should have no other site yet).
 2. Prefer **HTTPS enabled** once DNS works; use HTTP-only temporarily if LE cannot issue yet, then switch.
 3. Document Root: relative path under `web/` is fine (Kan will be reverse-proxied; Document Root need not hold the Node app). App files live under `files/` (next step).
 4. Do **not** paste Apache ProxyPass until Node is listening on the chosen port (or expect 502s).
 
 ## 3. Postgres
 
-1. Create a Postgres database and user in the control panel for Kan.
+1. Create a Postgres database and user **on the Kan hosting order** (not the main site order).
 2. Build `POSTGRES_URL` and store it only in the server `.env` (never in git).
 3. Note any quota limits for the hosting plan.
 
