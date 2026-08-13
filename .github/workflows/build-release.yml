@@ -1,0 +1,103 @@
+# Build Kan (pinned tag) on GitHub-hosted runners and publish a standalone tarball Release.
+# Never run this job on May First / Forgejo runners (Next.js OOM).
+#
+# No repository secrets required — uses GITHUB_TOKEN to create the Release.
+name: Build release
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - KAN_VERSION
+      - scripts/pack-standalone.sh
+      - scripts/start.sh
+      - scripts/migrate.sh
+      - .github/workflows/build-release.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout kan-ops
+        uses: actions/checkout@v4
+
+      - name: Read KAN_VERSION
+        id: pin
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '[:space:]' < KAN_VERSION)"
+          if [[ -z "$VERSION" ]]; then
+            echo "::error::KAN_VERSION is empty"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "release_tag=kan-$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Pin: $VERSION → Release tag kan-$VERSION"
+
+      - name: Checkout kanbn/kan @ pin
+        uses: actions/checkout@v4
+        with:
+          repository: kanbn/kan
+          ref: ${{ steps.pin.outputs.version }}
+          path: upstream/kan
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.14.2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.18"
+          cache: pnpm
+          cache-dependency-path: upstream/kan/pnpm-lock.yaml
+
+      - name: Install and build @kan/web (standalone)
+        working-directory: upstream/kan
+        env:
+          CI: true
+          NEXT_PUBLIC_USE_STANDALONE_OUTPUT: "true"
+          NEXT_PUBLIC_BASE_URL: https://kan.dsaneworleans.org
+          NEXT_PUBLIC_APP_VERSION: ${{ steps.pin.outputs.version }}
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm build --filter=@kan/web
+
+      - name: Pack standalone tarball
+        env:
+          KAN_SRC: ${{ github.workspace }}/upstream/kan
+          VERSION: ${{ steps.pin.outputs.version }}
+        run: ./scripts/pack-standalone.sh
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kan-standalone-${{ steps.pin.outputs.version }}
+          path: dist/kan-standalone-${{ steps.pin.outputs.version }}.tar.gz
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.pin.outputs.release_tag }}
+          name: Kan standalone ${{ steps.pin.outputs.version }}
+          body: |
+            Ops build of unmodified upstream [kanbn/kan `${{ steps.pin.outputs.version }}`](https://github.com/kanbn/kan/tree/${{ steps.pin.outputs.version }}).
+
+            - Asset: `kan-standalone-${{ steps.pin.outputs.version }}.tar.gz` (Next.js standalone + migrate bundle)
+            - License: Kan is **AGPL-3.0**. Corresponding source for this binary is the upstream tag linked above (pinned unmodified in this ops repo).
+            - Built on `ubuntu-latest` with `NEXT_PUBLIC_USE_STANDALONE_OUTPUT=true`.
+          files: dist/kan-standalone-${{ steps.pin.outputs.version }}.tar.gz
+          fail_on_unmatched_files: true
+          make_latest: true

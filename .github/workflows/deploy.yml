@@ -1,0 +1,147 @@
+# Deploy a Kan standalone Release tarball to May First over SSH.
+#
+# Required repository secrets — see docs/github-secrets.md:
+#   HOST, USER, PASSWORD, MAY_FIRST_AUTH_URL, SERVICE_NAME, KAN_APP_ROOT
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: GitHub Release tag (e.g. kan-v0.6.0)
+        required: true
+        type: string
+        default: kan-v0.6.0
+      dry_run:
+        description: Upload tarball only; skip migrate/restart/healthcheck
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-mayfirst
+  cancel-in-progress: false
+
+env:
+  HOST: ${{ secrets.HOST }}
+  USER: ${{ secrets.USER }}
+  PASSWORD: ${{ secrets.PASSWORD }}
+  MAY_FIRST_AUTH_URL: ${{ secrets.MAY_FIRST_AUTH_URL }}
+  SERVICE_NAME: ${{ secrets.SERVICE_NAME }}
+  KAN_APP_ROOT: ${{ secrets.KAN_APP_ROOT }}
+  # Public loopback port (also in apache/kan.dsaneworleans.org.conf)
+  KAN_PORT: "3055"
+  PUBLIC_URL: https://kan.dsaneworleans.org
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Validate secrets
+        run: |
+          set -euo pipefail
+          missing=0
+          for key in HOST USER PASSWORD MAY_FIRST_AUTH_URL SERVICE_NAME KAN_APP_ROOT; do
+            if [ -z "${!key:-}" ]; then
+              echo "::error::Missing repository secret: $key (see docs/github-secrets.md)"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then exit 1; fi
+
+      - name: Checkout kan-ops
+        uses: actions/checkout@v4
+
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: May First auth grant
+        run: |
+          set -euo pipefail
+          # Same grant pattern as other MF deploys; do not require a specific HTTP status.
+          curl --silent --show-error \
+            "$MAY_FIRST_AUTH_URL" -X POST \
+            -d "user_name=$USER" \
+            -d "user_pass=$PASSWORD" \
+            -d "action=grant" \
+            -o /dev/null -w "auth_grant_http=%{http_code}\n"
+
+      - name: Configure SSH helper
+        run: |
+          set -euo pipefail
+          {
+            echo "SSH=sshpass -p $PASSWORD ssh -o StrictHostKeyChecking=no $USER@$HOST"
+            echo "SCP=sshpass -p $PASSWORD scp -o StrictHostKeyChecking=no"
+          } >> "$GITHUB_ENV"
+
+      - name: Download Release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          VERSION="${RELEASE_TAG#kan-}"
+          ASSET="kan-standalone-${VERSION}.tar.gz"
+          mkdir -p dist
+          gh release download "$RELEASE_TAG" \
+            --repo "${{ github.repository }}" \
+            --pattern "$ASSET" \
+            --dir dist
+          test -f "dist/$ASSET"
+          echo "ASSET=$ASSET" >> "$GITHUB_ENV"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          ls -lh "dist/$ASSET"
+
+      - name: Upload tarball and remote-deploy.sh
+        run: |
+          set -euo pipefail
+          $SSH "mkdir -p '$KAN_APP_ROOT/incoming'"
+          $SCP "dist/$ASSET" "$USER@$HOST:$KAN_APP_ROOT/incoming/$ASSET"
+          $SCP scripts/remote-deploy.sh "$USER@$HOST:$KAN_APP_ROOT/incoming/remote-deploy.sh"
+          $SSH "chmod 755 '$KAN_APP_ROOT/incoming/remote-deploy.sh'"
+
+      - name: Remote unpack / migrate / restart
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          $SSH "KAN_APP_ROOT='$KAN_APP_ROOT' SERVICE_NAME='$SERVICE_NAME' \
+            '$KAN_APP_ROOT/incoming/remote-deploy.sh' \
+            '$KAN_APP_ROOT/incoming/$ASSET'"
+
+      - name: Healthcheck (loopback via SSH)
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          attempt=0
+          max_attempts=24
+          while [ "$attempt" -lt "$max_attempts" ]; do
+            code="$($SSH "curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:${KAN_PORT}/" || echo 000)"
+            echo "loopback HTTP $code (attempt $((attempt + 1))/$max_attempts)"
+            if [ "$code" = "200" ] || [ "$code" = "302" ] || [ "$code" = "307" ] || [ "$code" = "308" ]; then
+              echo "Loopback health OK"
+              exit 0
+            fi
+            attempt=$((attempt + 1))
+            sleep 5
+          done
+          echo "Loopback health failed; recent journal:"
+          $SSH "journalctl --user --unit '$SERVICE_NAME' -n 80 --no-pager" || true
+          exit 1
+
+      - name: Healthcheck (public URL)
+        if: ${{ !inputs.dry_run }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          # May 502 until Apache ProxyPass is pasted; do not fail the job solely on this.
+          code="$(curl -sS -o /dev/null -w '%{http_code}' "$PUBLIC_URL/" || echo 000)"
+          echo "public HTTP $code for $PUBLIC_URL"
+          if [ "$code" = "200" ] || [ "$code" = "302" ] || [ "$code" = "307" ] || [ "$code" = "308" ]; then
+            echo "Public health OK"
+          else
+            echo "::warning::Public URL not healthy yet (often means Apache ProxyPass not applied). Loopback check is authoritative."
+          fi

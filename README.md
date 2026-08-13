@@ -22,6 +22,7 @@ Hostname target: `https://kan.dsaneworleans.org` (changeable later).
 |-----|------|
 | [`docs/may-first-checklist.md`](./docs/may-first-checklist.md) | Human MF control-panel steps (site, DNS, TLS, Postgres, Apache, forever job) |
 | [`docs/access-model.md`](./docs/access-model.md) | Invite-link auth (shipping), bootstrap admin, how to open signup later |
+| [`docs/github-secrets.md`](./docs/github-secrets.md) | GitHub Actions secrets + which workflows need them |
 
 ## Auth (MVP)
 
@@ -35,9 +36,16 @@ Kan is licensed under **AGPL-3.0**. Prefer pinning **unmodified** upstream via `
 
 This ops repo’s scripts, Apache snippets, and workflows are ours. They are separate from Kan’s license surface; Kan itself remains AGPL wherever it runs.
 
+## CI / deploy
+
+| Workflow | When | Secrets |
+|----------|------|---------|
+| **Build release** | `workflow_dispatch` or pin/script changes | None (`GITHUB_TOKEN` only) |
+| **Deploy** | `workflow_dispatch` (release tag) | See [`docs/github-secrets.md`](./docs/github-secrets.md) |
+
 ## Secrets
 
-Never commit `.env`, mailbox passwords, Discord tokens, or May First credentials. Put secrets only in the server `.env` and GitHub Actions secrets.
+Never commit `.env`, mailbox passwords, Discord tokens, or May First credentials. Put secrets only in the server `.env` and GitHub Actions secrets (list in [`docs/github-secrets.md`](./docs/github-secrets.md)).
 
 ## Status
 
