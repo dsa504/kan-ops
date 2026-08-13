@@ -1,15 +1,20 @@
 # Access model (MVP)
 
-Invite-link onboarding with credentials (email/password).
+Chapter preference (confirmed with access management): **option 2** — not completely open signup; members get in via a **non-public Discord invite link** (and/or email invites), not by advertising open registration.
+
+| Option | Meaning | MVP |
+|--------|---------|-----|
+| **1** | Completely open signup (lowest friction; bots can hit `/signup`) | Not chosen |
+| **2** | Self-service via Discord invite link (not posted publicly) and/or email invites | **Shipping** |
 
 ## What we ship
 
 | Setting | Value | Notes |
 |---------|--------|------|
 | Credentials (email/password) | On | `NEXT_PUBLIC_ALLOW_CREDENTIALS=true` |
-| Public signup UI | On for invite-link MVP | See **Kan caveat** below |
+| `NEXT_PUBLIC_DISABLE_SIGN_UP` | `false` for invite-link path | See **Kan caveat** — not the same as “option 1” |
 | SMTP | On | Existing Proton mailbox (same as other chapter bots) |
-| Workspace invite link | Yes | Share in members-only Discord; rotate if leaked |
+| Workspace invite link | Yes | Members-only Discord only; rotate if leaked |
 
 OAuth (Discord/Google) is out of MVP.
 
@@ -22,9 +27,11 @@ Practical effect:
 - Invite link → Sign up with signup **disabled** → Better Auth often returns **400** (hook rejects user create).
 - The signup **page** still opens for `/signup?next=/invite/...`, but account creation fails server-side.
 
-**MVP choice:** keep `NEXT_PUBLIC_DISABLE_SIGN_UP=false` and rely on the **invite link** (Discord-only distribution + rotate if leaked). Locking signup with `true` works for **email invites**, not for invite-link joiners, unless Kan is patched or upgraded to treat invite codes like pending invites.
+**How this still satisfies option 2:** keep `NEXT_PUBLIC_DISABLE_SIGN_UP=false` so the invite-link flow works, and treat access control as **distribution of the invite URL** (members-only Discord, rotate if leaked). Do **not** advertise `/signup` or “create an account at kan.dsaneworleans.org” in public channels.
 
-Do **not** leave `/signup` linked in public chapter materials; only share the invite URL.
+Residual risk vs true hard-lock: anyone who discovers `/signup` can register while the env flag is `false`. That is narrower than option 1 (no public call-to-action) but not as hard as email-invite-only with `DISABLE_SIGN_UP=true`.
+
+Hard lock (`true`) works for **email invites**, not for invite-link joiners, unless Kan is patched or upgraded to treat invite codes like pending invites.
 
 ## SMTP
 
