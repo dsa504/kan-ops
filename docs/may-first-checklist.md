@@ -29,7 +29,7 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | Membership | New Orleans DSA (existing) |
 | **New** hosting order name / id | |
 | Site id (`/home/sites/<SITE_ID>/…`) | |
-| SSH / SFTP username for this order | |
+| SSH / SFTP username for this order | `dsakan` |
 | DNS record type (A / Alias) | |
 | TLS ready (Let’s Encrypt) | |
 | Postgres DB name | |
@@ -74,7 +74,7 @@ Still on the **Kan hosting order**:
 
 ## 4. App layout on the site account
 
-SSH in, then create a stable layout (names can match deploy scripts later):
+SSH as **`dsakan`** (Kan hosting-order user), then create a stable layout (names can match deploy scripts later):
 
 ```text
 /home/sites/<SITE_ID>/files/kan/
