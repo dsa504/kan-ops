@@ -41,7 +41,7 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | Postgres max connections / quota | 25 / 1gb |
 | `POSTGRES_URL` shape (password only on server) | `postgresql://dsakan_kan:…@psql002.mayfirst.cx/dsakan_kan` |
 | `POSTGRES_URL` stored in server `.env` only | pending (create in §4 / first deploy) |
-| Loopback `PORT` | |
+| Loopback `PORT` | **3055** (`127.0.0.1`; verified free with `ss`) |
 | App directory (absolute, no trailing slash) | `/home/sites/388570/files/kan` (created; `releases/` present) |
 | Forever job item id (`red-item-<id>.service`) | |
 | Node install notes (nvm path, version) | |
@@ -123,7 +123,9 @@ Forever **Directory** (absolute, **no trailing slash**): `/home/sites/388570/fil
 
 1. Pick an unused high port on `127.0.0.1` for this site account.
 2. Verify free: `ss -ltnp | grep 127.0.0.1:<PORT>` (or equivalent).
-3. Put the same port in Apache `ProxyPass` and in the app listen config / env as required by the deploy layout.
+3. Put the same port in Apache `ProxyPass` and in the app `.env` (`PORT=`).
+
+**Done for this deploy:** **`PORT=3055`** looks free on the Kan site account.
 
 ## 6. Node (nvm)
 
