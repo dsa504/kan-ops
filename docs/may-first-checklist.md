@@ -182,6 +182,7 @@ Follow [`docs/access-model.md`](./access-model.md): create admin → disable pub
 - Public: `curl -I https://kan.dsaneworleans.org/`
 - Local via SSH: `curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:<PORT>/`
 - Confirm exact Kan health API path when wiring CI (upstream lists `/api/...` health endpoints).
+- **Runtime public URL (required):** Release tarballs are site-agnostic. After deploy, `curl -sS https://kan.dsaneworleans.org/__ENV.js` must include `NEXT_PUBLIC_BASE_URL":"https://kan.dsaneworleans.org"` (from server `.env`, not the CI build). Login page must not redirect to another chapter or a placeholder host.
 
 ## Rollback (ops)
 

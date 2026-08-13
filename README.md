@@ -6,13 +6,15 @@ This repository pins an upstream Kan release tag, builds a **Next.js standalone 
 
 ## Architecture (short)
 
-1. **Build (GitHub Actions, `ubuntu-latest`):** checkout Kan @ `KAN_VERSION` → `pnpm` build with `NEXT_PUBLIC_USE_STANDALONE_OUTPUT=true` → pack `kan-standalone-<version>.tar.gz` → GitHub Release asset.
+1. **Build (GitHub Actions, `ubuntu-latest`):** checkout Kan @ `KAN_VERSION` → `pnpm` build with `NEXT_PUBLIC_USE_STANDALONE_OUTPUT=true` (no chapter hostname baked in) → pack `kan-standalone-<version>.tar.gz` → GitHub Release asset.
 2. **Deploy (GitHub Actions → May First SSH):** download Release → sync to site files → unpack → migrate → restart forever job → healthcheck.
-3. **Runtime (May First):** Apache HTTPS → `ProxyPass` → `127.0.0.1:<port>` → Node (foreground via forever job) → Postgres (MF control panel).
+3. **Runtime (May First):** Apache HTTPS → `ProxyPass` → `127.0.0.1:<port>` → Node (foreground via forever job) → Postgres (MF control panel). Server `.env` supplies `NEXT_PUBLIC_BASE_URL` (and optional storage public vars) via Kan’s `next-runtime-env` / `bootstrap.cjs`.
+
+**One Release, many chapters:** the tarball is site-agnostic. NOLA (`https://kan.dsaneworleans.org`) and Cooperative Codebase (`https://kan.cooperativecodebase.com`, plus S3 public vars when used) each set public URLs only in that site’s forever-job `.env`.
 
 **Do not run `next build` / heavy `pnpm` builds on May First** (or on shared Forgejo / `mayfirst-ci` runners). Those environments commonly OOM on Next.js. Docker/Compose are unavailable on May First shared hosting.
 
-Hostname target: `https://kan.dsaneworleans.org` (changeable later).
+NOLA hostname today: `https://kan.dsaneworleans.org`.
 
 **May First:** one web site per hosting order. Kan uses a **dedicated hosting order** under the New Orleans DSA membership (not a second site on an existing order). See [`docs/may-first-checklist.md`](./docs/may-first-checklist.md).
 
@@ -59,8 +61,9 @@ Pattern summary:
 2. **Build stays on GitHub-hosted runners** (`ubuntu-latest`). Do **not** run `pnpm build` / Next production builds on May First or on Forgejo / `mayfirst-ci` runners (OOM).
 3. Forgejo may later run a **deploy-only** job (auth grant + rsync/SSH + restart) that consumes a GitHub Release tarball — it should not rebuild Next.
 4. Create a **new May First hosting order** (one site per order), new Postgres, new forever job, new loopback port, new Apache ProxyPass snippet, new server `.env`, and new GitHub Actions secrets (`HOST` / `USER` / `PASSWORD` / `MAY_FIRST_AUTH_URL` / `KAN_APP_ROOT` / `SERVICE_NAME`).
-5. Pin upstream via `KAN_VERSION`; bump the pin and re-run **Build release** → **Deploy** to upgrade.
+5. Pin upstream via `KAN_VERSION`; bump the pin and re-run **Build release** → **Deploy** to upgrade. Prefer consuming the **same generic** GitHub Release object from `dsa504/kan-ops` (or a mirror) with CC’s own server `.env` (`NEXT_PUBLIC_BASE_URL=https://kan.cooperativecodebase.com`, S3 public vars for `https://s3.cooperativecodebase.com` when enabled).
 6. **Rollback:** keep prior `releases/<id>/` dirs (deploy prunes old ones); point `current` at a previous release and restart the forever unit, or re-run **Deploy** with an older Release tag.
+7. **Smoke after deploy:** chapter origin loads; `/__ENV.js` (or equivalent runtime injection) shows **this** chapter’s `NEXT_PUBLIC_BASE_URL`, not another chapter and not empty.
 
 ## Status
 

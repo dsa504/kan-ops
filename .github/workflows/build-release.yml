@@ -1,6 +1,9 @@
 # Build Kan (pinned tag) on GitHub-hosted runners and publish a standalone tarball Release.
 # Never run this job on May First / Forgejo runners (Next.js OOM).
 #
+# Site-agnostic artifact: do NOT set chapter NEXT_PUBLIC_BASE_URL / STORAGE_* at build.
+# Runtime next-runtime-env (bootstrap.cjs + server .env) supplies public URLs per site.
+#
 # No repository secrets required — uses GITHUB_TOKEN to create the Release.
 name: Build release
 
@@ -66,7 +69,7 @@ jobs:
         env:
           CI: true
           NEXT_PUBLIC_USE_STANDALONE_OUTPUT: "true"
-          NEXT_PUBLIC_BASE_URL: https://kan.dsaneworleans.org
+          # Version pin only — no chapter hostname / S3 public URLs (optional in Kan env.ts).
           NEXT_PUBLIC_APP_VERSION: ${{ steps.pin.outputs.version }}
           NODE_OPTIONS: --max-old-space-size=6144
         run: |
@@ -96,8 +99,9 @@ jobs:
             Ops build of unmodified upstream [kanbn/kan `${{ steps.pin.outputs.version }}`](https://github.com/kanbn/kan/tree/${{ steps.pin.outputs.version }}).
 
             - Asset: `kan-standalone-${{ steps.pin.outputs.version }}.tar.gz` (Next.js standalone + migrate bundle)
+            - **Site-agnostic:** chapter hostname / S3 public URLs are **not** baked into this tarball. Each May First site supplies `NEXT_PUBLIC_BASE_URL` (and optional `NEXT_PUBLIC_STORAGE_*`) via server `.env`; Kan injects them at runtime (`next-runtime-env` / `bootstrap.cjs`).
             - License: Kan is **AGPL-3.0**. Corresponding source for this binary is the upstream tag linked above (pinned unmodified in this ops repo).
-            - Built on `ubuntu-latest` with `NEXT_PUBLIC_USE_STANDALONE_OUTPUT=true`.
+            - Built on `ubuntu-latest` with `NEXT_PUBLIC_USE_STANDALONE_OUTPUT=true` only (no chapter `NEXT_PUBLIC_*` at build).
           files: dist/kan-standalone-${{ steps.pin.outputs.version }}.tar.gz
           fail_on_unmatched_files: true
           make_latest: true
