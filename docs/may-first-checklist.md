@@ -33,9 +33,13 @@ Pasteable Apache snippet: [`apache/kan.dsaneworleans.org.conf`](../apache/kan.ds
 | SSH / SFTP username for this order | `dsakan` |
 | DNS (auto-created with order) | Alias `kan.dsaneworleans.org` → `c.webproxy.mayfirst.org` (item **388566**); Alias `www.kan.dsaneworleans.org` → `c.webproxy.mayfirst.org` (item **388567**); both active 2026-08-13 |
 | TLS ready (Let’s Encrypt) | **yes** — https enabled; browser reports valid cert; MF “future home” page OK (2026-08-13) |
-| Postgres DB name | |
-| Postgres user | |
-| `POSTGRES_URL` stored in server `.env` only | yes / no |
+| Postgres item id | **388571** |
+| Postgres host | `psql002.mayfirst.org` (URL host in panel: `psql002.mayfirst.cx`) |
+| Postgres DB name | `dsakan_kan` (MF ties DB name to the DB user; no separate choice) |
+| Postgres user | `dsakan_kan` |
+| Postgres max connections / quota | 25 / 1gb |
+| `POSTGRES_URL` shape (password only on server) | `postgresql://dsakan_kan:…@psql002.mayfirst.cx/dsakan_kan` |
+| `POSTGRES_URL` stored in server `.env` only | pending (create in §4 / first deploy) |
 | Loopback `PORT` | |
 | App directory (absolute, no trailing slash) | e.g. `/home/sites/<SITE_ID>/files/kan` |
 | Forever job item id (`red-item-<id>.service`) | |
@@ -77,8 +81,11 @@ Still on the **Kan hosting order**:
 ## 3. Postgres
 
 1. Create a Postgres database and user **on the Kan hosting order** (not the main site order).
-2. Build `POSTGRES_URL` and store it only in the server `.env` (never in git).
-3. Note any quota limits for the hosting plan.
+2. On May First, the **database name and DB username are the same** (no separate DB name field). For Kan we used **`dsakan_kan`**.
+3. Build `POSTGRES_URL` from the panel connection string and store it only in the server `.env` (never in git). Prefer the `postgresql://` scheme Kan expects if the panel shows `psql://`.
+4. Note host, max connections, and disk quota.
+
+**Done for this deploy:** item **388571** on `psql002.mayfirst.org`, user/db **`dsakan_kan`**, panel URL host `psql002.mayfirst.cx`, max connections 25, quota 1gb.
 
 ## 4. App layout on the site account
 
