@@ -23,6 +23,7 @@ NOLA hostname today: `https://kan.dsaneworleans.org`.
 | Doc | What |
 |-----|------|
 | [`docs/may-first-checklist.md`](./docs/may-first-checklist.md) | Human MF control-panel steps (site, DNS, TLS, Postgres, Apache, forever job) |
+| [`docs/s3-seaweedfs-checklist.md`](./docs/s3-seaweedfs-checklist.md) | SeaweedFS / `s3.dsaneworleans.org` on MF (Kan image uploads) |
 | [`docs/access-model.md`](./docs/access-model.md) | Email-invite-only auth (shipping), optional invite-link risk, bootstrap |
 | [`docs/github-secrets.md`](./docs/github-secrets.md) | GitHub Actions secrets + which workflows need them |
 
